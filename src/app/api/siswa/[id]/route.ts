@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // PUT /api/siswa/:id
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   const body = await req.json();
   const { nama, nis, kelas_id } = body;
 
@@ -14,7 +18,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const { data, error } = await supabaseAdmin
     .from("siswa")
     .update({ nama: nama.trim(), nis: nis?.trim() || null, kelas_id })
-    .eq("id", params.id)
+    .eq("id", id)
     .select("*, kelas(nama_kelas)")
     .single();
 
@@ -24,11 +28,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE /api/siswa/:id
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
   const { error } = await supabaseAdmin
     .from("siswa")
     .delete()
-    .eq("id", params.id);
+    .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
