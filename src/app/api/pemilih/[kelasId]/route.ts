@@ -1,32 +1,27 @@
-// src/app/api/pemilih/[kelasId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
+// Pastikan path import supabaseAdmin di bawah ini sudah benar sesuai proyek Anda
+import { supabaseAdmin } from "@/lib/supabase"; 
 
-// GET /api/pemilih/:kelasId — list PIN credentials untuk kelas tertentu
-export async function GET(req: NextRequest, { params }: { params: { kelasId: string } }) {
-  const { kelasId } = params;
-export async function GET(req: NextRequest, { params }: { params: { kelasId: string } }) {
-  const { data, error } = await supabaseAdmin
-    .from("credentials")
-    .select("*, siswa(nama, nis)")
-    .eq("kelas_id", params.kelasId)
-    .order("created_at");
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ kelasId: string }> }
+) {
+  try {
+    // Membaca params secara asynchronous (Wajib di Next.js 15)
+    const { kelasId } = await context.params;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // Mengambil data dari Supabase
+    const { data, error } = await supabaseAdmin
+      .from("credentials")
+      .select("*, siswa(nama, nis)")
+      .eq("kelas_id", kelasId); // Asumsi kolom filter adalah kelas_id
 
-  return NextResponse.json(data || []);
-}
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
-// DELETE /api/pemilih/:kelasId — hapus semua credential kelas ini (reset)
-export async function DELETE(req: NextRequest, { params }: { params: { kelasId: string } }) {
-  const { error } = await supabaseAdmin
-    .from("credentials")
-    .delete()
-    .eq("kelas_id", params.kelasId);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  return NextResponse.json({ success: true });
-}
-  return NextResponse.json({ /* response */ });
+    return NextResponse.json(data, { status: 200 });
+  } catch (err) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
