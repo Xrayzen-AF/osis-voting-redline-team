@@ -1,1 +1,1 @@
-Nothing should be ignored based on the provided file changes. The only modified file is a TypeScript route file (`src/app/api/pemilih/[kelasId]/route.ts`), which is source code and should not be added to .gitignore.
+Nothing should be ignored based on the provided file changes, as only a TypeScript route file was modified without any build artifacts, dependencies, or temporary files being added.

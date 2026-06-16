@@ -1,4 +1,3 @@
-// src/app/api/pemilih/[kelasId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -6,7 +5,6 @@ interface RouteParams {
   params: Promise<{ kelasId: string }>;
 }
 
-// GET /api/pemilih/:kelasId - list PIN credentials untuk kelas tertentu
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { kelasId } = await params;
   const { data, error } = await supabaseAdmin
@@ -20,7 +18,6 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   return NextResponse.json(data || []);
 }
 
-// DELETE /api/pemilih/:kelasId - hapus semua credential kelas ini (reset)
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { kelasId } = await params;
   const { error } = await supabaseAdmin
