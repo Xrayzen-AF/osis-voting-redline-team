@@ -2,12 +2,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
+interface RouteParams {
+  params: Promise<{ kelasId: string }>;
+}
+
 // GET /api/pemilih/:kelasId — list PIN credentials untuk kelas tertentu
-export async function GET(req: NextRequest, { params }: { params: { kelasId: string } }) {
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const { kelasId } = await params;
   const { data, error } = await supabaseAdmin
     .from("credentials")
     .select("*, siswa(nama, nis)")
-    .eq("kelas_id", params.kelasId)
+    .eq("kelas_id", kelasId)
     .order("created_at");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -16,11 +21,12 @@ export async function GET(req: NextRequest, { params }: { params: { kelasId: str
 }
 
 // DELETE /api/pemilih/:kelasId — hapus semua credential kelas ini (reset)
-export async function DELETE(req: NextRequest, { params }: { params: { kelasId: string } }) {
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const { kelasId } = await params;
   const { error } = await supabaseAdmin
     .from("credentials")
     .delete()
-    .eq("kelas_id", params.kelasId);
+    .eq("kelas_id", kelasId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
