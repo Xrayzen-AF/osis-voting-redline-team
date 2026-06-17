@@ -43,10 +43,4 @@
     "tailwindcss": "^4",
     "typescript": "^5"
   }
-  "scripts": {
-    "postinstall": "prisma generate",
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  }
 }
