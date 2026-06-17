@@ -1,7 +1,7 @@
 "use client";
 // src/app/admin/daftar-pemilih/page.tsx
-import { useEffect, useState } from "react";
-import { Search, Key, Users, X } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Search, Key, Users } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import AdminLayout from "@/components/admin/AdminLayout";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -50,22 +49,22 @@ export default function DaftarPemilihPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     const res = await fetch(`/api/pemilih?search=${encodeURIComponent(search)}`);
     const data = await res.json();
     setStatsList(Array.isArray(data) ? data : []);
     setLoading(false);
-  };
+  }, [search]);
 
-  const fetchKelas = async () => {
+  const fetchKelas = useCallback(async () => {
     const res = await fetch("/api/kelas");
     const data = await res.json();
     setKelasList(Array.isArray(data) ? data : []);
-  };
+  }, []);
 
-  useEffect(() => { fetchStats(); }, [search]);
-  useEffect(() => { fetchKelas(); }, []);
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+  useEffect(() => { fetchKelas(); }, [fetchKelas]);
 
   const doGenerate = async () => {
     if (!selectedKelasGen) return showToast("Pilih kelas dulu", "error");
@@ -110,7 +109,11 @@ export default function DaftarPemilihPage() {
     <main className="pt-20 md:pt-8 px-4 md:px-8 pb-24 md:pb-8 w-full grow">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-[9999] px-5 py-3 rounded-xl text-sm font-medium text-white shadow-lg ${toast.type === "success" ? "bg-emerald-500" : "bg-red-500"}`}>
+        <div
+          className={`fixed top-6 right-6 z-[9999] px-5 py-3 rounded-xl text-sm font-medium text-white shadow-lg ${
+            toast.type === "success" ? "bg-emerald-500" : "bg-red-500"
+          }`}
+        >
           {toast.msg}
         </div>
       )}
@@ -127,7 +130,10 @@ export default function DaftarPemilihPage() {
           </p>
         </div>
         <button
-          onClick={() => { setSelectedKelasGen(""); setGenerateModal(true); }}
+          onClick={() => {
+            setSelectedKelasGen("");
+            setGenerateModal(true);
+          }}
           className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all active:scale-[0.98] shadow-md shadow-blue-500/20"
         >
           <span className="text-lg leading-none">+</span>
@@ -179,42 +185,37 @@ export default function DaftarPemilihPage() {
               ) : (
                 statsList.map((s) => (
                   <tr key={s.kelas_id} className="hover:bg-slate-50 transition-colors">
-                    {/* Kelas */}
                     <td className="px-6 py-4">
                       <span className="inline-block px-3 py-1 border border-slate-300 rounded-lg text-sm font-semibold text-slate-800 bg-white whitespace-nowrap">
                         {s.nama_kelas}
                       </span>
                     </td>
-
-                    {/* Total */}
                     <td className="px-6 py-4 font-semibold text-slate-700 whitespace-nowrap">
                       {s.total_kredensial}
                     </td>
-
-                    {/* Belum Digunakan */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`font-medium ${s.belum_digunakan > 0 ? "text-slate-700" : "text-slate-300"}`}>
+                      <span
+                        className={`font-medium ${
+                          s.belum_digunakan > 0 ? "text-slate-700" : "text-slate-300"
+                        }`}
+                      >
                         {s.belum_digunakan}
                       </span>
                     </td>
-
-                    {/* Sudah Memilih */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-bold text-emerald-500">
-                        {s.sudah_memilih}
-                      </span>
+                      <span className="font-bold text-emerald-500">{s.sudah_memilih}</span>
                     </td>
-
-                    {/* Aksi */}
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <button
-                        onClick={() => s.total_kredensial > 0 ? openPinModal(s) : undefined}
+                        onClick={() =>
+                          s.total_kredensial > 0 ? openPinModal(s) : undefined
+                        }
                         disabled={s.total_kredensial === 0}
-                        className={`px-4 py-1.5 rounded-lg text-sm font-semibold border transition whitespace-nowrap
-                          ${s.total_kredensial > 0
+                        className={`px-4 py-1.5 rounded-lg text-sm font-semibold border transition whitespace-nowrap ${
+                          s.total_kredensial > 0
                             ? "border-blue-500 text-blue-600 hover:bg-blue-50 cursor-pointer"
                             : "border-slate-200 text-slate-300 cursor-default"
-                          }`}
+                        }`}
                       >
                         Lihat PIN
                       </button>
@@ -234,7 +235,8 @@ export default function DaftarPemilihPage() {
             <DialogTitle>Generate PIN</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-500 leading-relaxed">
-            Pilih kelas untuk di-generate PIN-nya. Siswa yang sudah punya PIN tidak akan dibuatkan ulang.
+            Pilih kelas untuk di-generate PIN-nya. Siswa yang sudah punya PIN tidak akan
+            dibuatkan ulang.
           </p>
           <div className="py-2">
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
@@ -247,7 +249,9 @@ export default function DaftarPemilihPage() {
             >
               <option value="">-- Pilih Kelas --</option>
               {kelasList.map((k) => (
-                <option key={k.id} value={k.id}>{k.nama_kelas}</option>
+                <option key={k.id} value={k.id}>
+                  {k.nama_kelas}
+                </option>
               ))}
             </select>
           </div>
@@ -270,7 +274,12 @@ export default function DaftarPemilihPage() {
       </Dialog>
 
       {/* ── Dialog Lihat PIN ── */}
-      <Dialog open={!!pinModal} onOpenChange={(open) => { if (!open) setPinModal(null); }}>
+      <Dialog
+        open={!!pinModal}
+        onOpenChange={(open) => {
+          if (!open) setPinModal(null);
+        }}
+      >
         <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <div className="flex items-center justify-between">
@@ -279,9 +288,24 @@ export default function DaftarPemilihPage() {
                 <span className="text-blue-600">{pinModal?.nama_kelas}</span>
               </DialogTitle>
               <div className="flex gap-2 mr-6">
-                <StatChip label="Total" value={pinModal?.total_kredensial ?? 0} color="text-blue-600" bg="bg-blue-50" />
-                <StatChip label="Belum" value={pinModal?.belum_digunakan ?? 0} color="text-amber-600" bg="bg-amber-50" />
-                <StatChip label="Memilih" value={pinModal?.sudah_memilih ?? 0} color="text-emerald-600" bg="bg-emerald-50" />
+                <StatChip
+                  label="Total"
+                  value={pinModal?.total_kredensial ?? 0}
+                  color="text-blue-600"
+                  bg="bg-blue-50"
+                />
+                <StatChip
+                  label="Belum"
+                  value={pinModal?.belum_digunakan ?? 0}
+                  color="text-amber-600"
+                  bg="bg-amber-50"
+                />
+                <StatChip
+                  label="Memilih"
+                  value={pinModal?.sudah_memilih ?? 0}
+                  color="text-emerald-600"
+                  bg="bg-emerald-50"
+                />
               </div>
             </div>
           </DialogHeader>
@@ -303,14 +327,18 @@ export default function DaftarPemilihPage() {
               <p className="text-center text-slate-400 py-10 text-sm">Memuat PIN...</p>
             ) : filteredPins.length === 0 ? (
               <p className="text-center text-slate-400 py-10 text-sm">
-                {pinList.length === 0 ? "Belum ada PIN. Klik Generate PIN terlebih dahulu." : "Tidak ditemukan."}
+                {pinList.length === 0
+                  ? "Belum ada PIN. Klik Generate PIN terlebih dahulu."
+                  : "Tidak ditemukan."}
               </p>
             ) : (
               <table className="w-full text-sm text-left">
                 <thead className="sticky top-0 bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
                   <tr>
                     {["No", "Nama Siswa", "NIS", "PIN", "Status"].map((h) => (
-                      <th key={h} className="px-4 py-3 whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 whitespace-nowrap">
+                        {h}
+                      </th>
                     ))}
                   </tr>
                 </thead>
@@ -318,7 +346,9 @@ export default function DaftarPemilihPage() {
                   {filteredPins.map((c, i) => (
                     <tr key={c.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-4 py-3 text-slate-300 text-xs w-8">{i + 1}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900">{c.siswa?.nama || "—"}</td>
+                      <td className="px-4 py-3 font-medium text-slate-900">
+                        {c.siswa?.nama || "—"}
+                      </td>
                       <td className="px-4 py-3 text-slate-500">{c.siswa?.nis || "—"}</td>
                       <td className="px-4 py-3">
                         <code className="bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-lg tracking-widest text-sm">
@@ -326,8 +356,13 @@ export default function DaftarPemilihPage() {
                         </code>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap
-                          ${c.sudah_digunakan ? "bg-emerald-50 text-emerald-700" : "bg-yellow-50 text-yellow-700"}`}>
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                            c.sudah_digunakan
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-yellow-50 text-yellow-700"
+                          }`}
+                        >
                           {c.sudah_digunakan ? "✓ Sudah Memilih" : "Belum"}
                         </span>
                       </td>
@@ -355,7 +390,17 @@ export default function DaftarPemilihPage() {
 
 // ─── Sub Components ───────────────────────────────────────────────────────────
 
-function StatChip({ label, value, color, bg }: { label: string; value: number; color: string; bg: string }) {
+function StatChip({
+  label,
+  value,
+  color,
+  bg,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  bg: string;
+}) {
   return (
     <div className={`text-center px-3 py-1.5 rounded-lg ${bg} min-w-[48px]`}>
       <div className={`text-base font-bold leading-tight ${color}`}>{value}</div>

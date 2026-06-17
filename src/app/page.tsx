@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState, KeyboardEvent, ClipboardEvent, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -47,12 +49,25 @@ export default function Home() {
       inputRefs.current[firstEmpty]?.focus();
       return;
     }
+
     setLoading(true);
     setError("");
-    // TODO: ganti dengan logika autentikasi kamu
+
+    // TODO: ganti baris di bawah dengan pemanggilan API verifikasi OTP
+    // yang sebenarnya (cek kode ke server/Supabase). Untuk sekarang,
+    // kode 6 digit apa pun dianggap valid sebagai placeholder.
     await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    alert(`Kode OTP: ${code.slice(0, 3)}-${code.slice(3)} dikirim!`);
+    const isValid = true; // ganti dengan hasil verifikasi dari server
+
+    if (!isValid) {
+      setLoading(false);
+      setError("Kode OTP salah atau sudah kedaluwarsa. Coba lagi.");
+      setOtp(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+      return;
+    }
+
+    router.push("/pemilihan");
   };
 
   return (
